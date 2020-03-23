@@ -3,6 +3,7 @@
 #import "Firebase.h"
 #import <objc/runtime.h>
 
+#import "MarketingCloudSDK/MarketingCloudSDK.h"
 
 @import UserNotifications;
 @import FirebaseFirestore;
@@ -386,6 +387,16 @@ didDisconnectWithUser:(GIDGoogleUser *)user
 - (void)userNotificationCenter:(UNUserNotificationCenter *)center
        willPresentNotification:(UNNotification *)notification
          withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
+
+     /** when we receive a push notificaton from Marketing Cloud the Firebase code invoked below
+        enters an infinite recursion that makes the App crash
+        As we don't need to support both push notification systems we simply disable all the Firebase
+        code and simply call Marketing Cloud
+     */
+    NSLog (@"🔥 Avoid another infinite recursion");
+    [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:notification.request];
+    completionHandler(UNNotificationPresentationOptionAlert + UNNotificationPresentationOptionSound);
+    return;
     
     @try{
         [self.delegate userNotificationCenter:center
@@ -458,6 +469,17 @@ didDisconnectWithUser:(GIDGoogleUser *)user
  didReceiveNotificationResponse:(UNNotificationResponse *)response
           withCompletionHandler:(void (^)(void))completionHandler
 {
+    /** when we receive a push notificaton from Marketing Cloud the Firebase code invoked below
+        enters an infinite recursion that makes the App crash
+        As we don't need to support both push notification systems we simply disable all the Firebase
+        code and call Marketing Cloud
+     */
+    NSLog (@"🔥 Avoid infinite recursion");
+    completionHandler ? completionHandler() : NSLog (@"");
+    [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:response.notification.request];
+    
+    return;
+
     @try{
         [self.delegate userNotificationCenter:center
            didReceiveNotificationResponse:response
