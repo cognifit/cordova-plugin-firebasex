@@ -319,7 +319,7 @@ static NSDictionary* mutableUserInfo;
      */
     NSLog (@"🔥 Avoid another infinite recursion");
     [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:notification.request];
-    completionHandler(UNNotificationPresentationOptionAlert + UNNotificationPresentationOptionSound);
+    completionHandler(UNNotificationPresentationOptionSound);
     return;
     
     @try{
