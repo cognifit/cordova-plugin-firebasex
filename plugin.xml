@@ -122,6 +122,7 @@
 				<pod name="Firebase/Messaging" spec="~> 6.0"/>
 				<pod name="Firebase/Performance" spec="~> 6.0"/>
 				<pod name="Firebase/RemoteConfig" spec="~> 6.0"/>
+				<pod name="FirebaseUI/Google" spec="~> 8.0"/>
 				<pod name="Fabric" spec="1.10.2"/>
 				<pod name="Crashlytics" spec="3.14.0"/>
 			</pods>
