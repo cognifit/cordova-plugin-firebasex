@@ -318,6 +318,10 @@ static NSDictionary* mutableUserInfo;
         code and simply call Marketing Cloud
      */
     NSLog (@"🔥 Avoid another infinite recursion");
+    
+    // notifications received through this method were received while the app was in the foreground
+    // we pass a flag set to true to signal this to the Marketing Cloud plugin
+    objc_setAssociatedObject(notification.request, (__bridge void *) [MarketingCloudSDK sharedInstance], @(true), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:notification.request];
     completionHandler(UNNotificationPresentationOptionSound);
     return;
