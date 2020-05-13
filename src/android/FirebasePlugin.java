@@ -1227,7 +1227,8 @@ public class FirebasePlugin extends CordovaPlugin {
     }
 
     protected static void createDefaultChannel(final JSONObject options) throws JSONException {
-        defaultNotificationChannel = createChannel(options);
+        // don't, we use only the Marketing Cloud channel
+        // defaultNotificationChannel = createChannel(options);
     }
 
     public void setDefaultChannel(final CallbackContext callbackContext, final JSONObject options) {
