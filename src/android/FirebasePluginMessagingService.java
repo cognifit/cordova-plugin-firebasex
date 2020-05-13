@@ -21,10 +21,6 @@ import com.crashlytics.android.Crashlytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import org.apache.cordova.CordovaPlugin;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import java.util.Map;
 import java.util.Random;
 
@@ -142,7 +138,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if(data.containsKey("notification_android_visibility")) visibility = data.get("notification_android_visibility");
                 if(data.containsKey("notification_android_priority")) priority = data.get("notification_android_priority");
 
-                sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId());
+                FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
             }
 
             if (TextUtils.isEmpty(id)) {
@@ -351,17 +347,5 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         if(v != null && !b.containsKey(k)){
             b.putString(k, v);
         }
-    }
-
-    private void sendNotificationToMarketingCloudPlugin(Map<String, String> data, String notificationId) {
-        CordovaPlugin marketingCloudPlugin = FirebasePlugin.instance.webView.getPluginManager().getPlugin("MCCordovaPlugin");
-        try {
-            Method method = marketingCloudPlugin.getClass().getMethod("handleNotificationData", Map.class, String.class, Boolean.class);
-            method.invoke(marketingCloudPlugin, data, notificationId, FirebasePlugin.inBackground());
-        }
-        catch (IllegalAccessException e) { }
-        catch (InvocationTargetException e) { }
-        catch (NoSuchMethodException e) { }
-        catch (SecurityException e) { }
     }
 }
