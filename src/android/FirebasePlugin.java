@@ -49,6 +49,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -382,6 +384,7 @@ public class FirebasePlugin extends CordovaPlugin {
                 data.putString("tap", "background");
                 Log.d(TAG, "Notification message on new intent: " + data.toString());
                 FirebasePlugin.sendMessage(data, applicationContext);
+                sendNotificationToMarketingCloudPlugin(data, data.getString("google.message_id"), false);
             }
         }catch (Exception e){
             handleExceptionWithoutContext(e);
@@ -1358,5 +1361,32 @@ public class FirebasePlugin extends CordovaPlugin {
                 webView.loadUrl("javascript:" + jsString);
             }
         });
+    }
+
+    /** ROUTING OF NOTIFICATIONS TO MARKETING CLOUD PLUGIN */
+
+    public static void sendNotificationToMarketingCloudPlugin(Bundle bundle, String notificationId, Boolean wasReceivedInForeground) {
+
+        CordovaPlugin marketingCloudPlugin = FirebasePlugin.instance.webView.getPluginManager().getPlugin("MCCordovaPlugin");
+        try {
+            Method method = marketingCloudPlugin.getClass().getMethod("handleNotificationData", Bundle.class, String.class, Boolean.class);
+            method.invoke(marketingCloudPlugin, bundle, notificationId, wasReceivedInForeground);
+        }
+        catch (IllegalAccessException e) { }
+        catch (InvocationTargetException e) { }
+        catch (NoSuchMethodException e) { }
+        catch (SecurityException e) { }
+    }
+
+    public static void sendNotificationToMarketingCloudPlugin(Map<String, String> data, String notificationId, Boolean wasReceivedInForeground) {
+        CordovaPlugin marketingCloudPlugin = FirebasePlugin.instance.webView.getPluginManager().getPlugin("MCCordovaPlugin");
+        try {
+            Method method = marketingCloudPlugin.getClass().getMethod("handleNotificationData", Map.class, String.class, Boolean.class);
+            method.invoke(marketingCloudPlugin, data, notificationId, wasReceivedInForeground);
+        }
+        catch (IllegalAccessException e) { }
+        catch (InvocationTargetException e) { }
+        catch (NoSuchMethodException e) { }
+        catch (SecurityException e) { }
     }
 }
