@@ -17,6 +17,7 @@ import android.text.TextUtils;
 import android.content.ContentResolver;
 import android.graphics.Color;
 
+import com.cognifit.app.R;
 import com.crashlytics.android.Crashlytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -138,7 +139,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if(data.containsKey("notification_android_visibility")) visibility = data.get("notification_android_visibility");
                 if(data.containsKey("notification_android_priority")) priority = data.get("notification_android_priority");
 
-                FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
+                if (FirebasePlugin.inBackground()) {
+                    showMarketingCloudNotification(data, remoteMessage.getMessageId());
+                } else {
+                    FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
+                }
             }
 
             if (TextUtils.isEmpty(id)) {
@@ -346,6 +351,53 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
     private void putKVInBundle(String k, String v, Bundle b){
         if(v != null && !b.containsKey(k)){
             b.putString(k, v);
+        }
+    }
+
+    private void showMarketingCloudNotification(Map<String, String> data, String messageId) {
+        String marketingCloudChannelId = "com.salesforce.marketingcloud.DEFAULT_CHANNEL";
+        String firebaseIntentAction = "com.google.firebase.MESSAGING_EVENT"; // <- see in the Manifest
+
+        String title = (data.containsKey("title") ? data.get("title") : null);
+        String message = (data.containsKey("alert") ? data.get("alert") : null);;
+
+        if (title != null && message != null) {
+            data.put("channel_id", marketingCloudChannelId);
+
+            Bundle bundle = new Bundle();
+            for (String key : data.keySet()) {
+                String value = data.get(key);
+                if (value != null) {
+                    bundle.putString(key, value);
+                }
+            }
+
+            bundle.putString("id", messageId);
+            bundle.putString("google.message_id", messageId); // <- so that FirebasePlugin will accept it
+            bundle.putString("title", title);
+            bundle.putString("body", message);
+
+            Intent myIntent = new Intent(this, OnNotificationOpenReceiver.class);
+            myIntent.setAction(firebaseIntentAction);
+            myIntent.putExtras(bundle);
+
+            PendingIntent myPendingIntent = PendingIntent.getBroadcast(this, messageId.hashCode(), myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            Notification.Builder builder = new Notification.Builder(this)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setSmallIcon(R.drawable.notification_icon)
+                    .setContentIntent(myPendingIntent)
+                    .setAutoCancel(true);
+
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                builder.setChannelId(marketingCloudChannelId);
+                builder.setVisibility((int) NotificationCompat.VISIBILITY_PUBLIC);
+            }
+
+            Notification myNotification = builder.build();
+            NotificationManager myNotificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+            myNotificationManager.notify(messageId.hashCode(), myNotification);
         }
     }
 }
