@@ -108,6 +108,7 @@ public class FirebasePlugin extends CordovaPlugin {
                             extras.putString("tap", "background");
                             notificationStack.add(extras);
                             Log.d(TAG, "Notification message found on init: " + extras.toString());
+                            sendNotificationToMarketingCloudPlugin(extras, extras.getString("google.message_id"), false);
                         }
                     }
                     defaultChannelId = getStringResource("default_notification_channel_id");
