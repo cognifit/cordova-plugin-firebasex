@@ -153,11 +153,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if (data.containsKey("notification_android_priority"))
                     priority = data.get("notification_android_priority");
 
-               if (FirebasePlugin.inBackground()) {
-                   showMarketingCloudNotification(data, remoteMessage.getMessageId());
-               } else {
-                   FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
-               }
+                if (FirebasePlugin.inBackground()) {
+                    showMarketingCloudNotification(data, remoteMessage.getMessageId());
+                } else {
+                    FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
+                }
             }
 
             if (TextUtils.isEmpty(id)) {
@@ -493,6 +493,15 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             InputStream externalImageStream = connection.getInputStream();
             Bitmap externalImageBitmap = BitmapFactory.decodeStream(externalImageStream);
             builder.setLargeIcon(externalImageBitmap);
+
+            int width = externalImageBitmap.getWidth();
+            int height = externalImageBitmap.getHeight();
+
+            if (width > 300 && height > 300) {
+                Bitmap nullBitmap = null;
+                Notification.Style style = new Notification.BigPictureStyle().bigPicture(externalImageBitmap).bigLargeIcon(nullBitmap);
+                builder.setStyle(style);
+            }
         }
     }
 }
