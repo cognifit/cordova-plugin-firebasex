@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,12 +22,16 @@ import com.cognifit.app.R;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -376,7 +381,6 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
         String title = (data.containsKey("title") ? data.get("title") : null);
         String message = (data.containsKey("alert") ? data.get("alert") : null);
-        ;
 
         if (title != null && message != null) {
             data.put("channel_id", marketingCloudChannelId);
@@ -423,6 +427,8 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             Notification myNotification = builder.build();
             NotificationManager myNotificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
             myNotificationManager.notify(messageId.hashCode(), myNotification);
+
+            storeNotification(bundle);
         }
     }
 
@@ -502,6 +508,24 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 Notification.Style style = new Notification.BigPictureStyle().bigPicture(externalImageBitmap).bigLargeIcon(nullBitmap);
                 builder.setStyle(style);
             }
+        }
+    }
+
+    private void storeNotification(Bundle bundle) {
+        JSONObject json = new JSONObject();
+        Set<String> keys = bundle.keySet();
+        try {
+            for (String key : keys) {
+                json.put(key, JSONObject.wrap(bundle.get(key)));
+            }
+            json.put("__$timestamp$__", System.currentTimeMillis());
+            SharedPreferences preferences = this.getSharedPreferences("PushNotifications", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+
+            editor.putString("normal.notification." + System.currentTimeMillis(), json.toString());
+            editor.apply();
+        } catch (JSONException e) {
+            /* ignored, this is best-effort thing */
         }
     }
 }
