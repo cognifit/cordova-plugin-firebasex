@@ -477,7 +477,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 String trainingTaskKey = matcher.group(1).toLowerCase();
                 String[] list = assetManager.list("www/assets/images/taskIcons/");
                 for (String filename : list) {
-                    if (filename.toLowerCase().contains("@3x") && filename.toLowerCase().contains(trainingTaskKey)) {
+                    if (filename.toLowerCase().contains("kids@3x") && filename.toLowerCase().contains(trainingTaskKey)) {
                         assetPath = "www/assets/images/taskIcons/".concat(filename);
                         break;
                     }
