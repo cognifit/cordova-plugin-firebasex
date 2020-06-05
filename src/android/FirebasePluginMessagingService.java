@@ -18,7 +18,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.cognifit.app.R;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -404,10 +403,15 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
             PendingIntent myPendingIntent = PendingIntent.getBroadcast(this, messageId.hashCode(), myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+            int notificationIconResourceId = getResources().getIdentifier(defaultSmallIconName, "drawable", getPackageName());
+            if (notificationIconResourceId == 0) {
+                notificationIconResourceId = getApplicationInfo().icon;
+            }
+
             Notification.Builder builder = new Notification.Builder(this)
                     .setContentTitle(title)
                     .setContentText(message)
-                    .setSmallIcon(R.drawable.notification_icon)
+                    .setSmallIcon(notificationIconResourceId)
                     .setContentIntent(myPendingIntent)
                     .setAutoCancel(true);
 
