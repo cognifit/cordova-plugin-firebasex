@@ -82,6 +82,10 @@ var parsePluginVariables = function(){
             }
         }
     }
+
+    // set platform key path from plugin variable
+    if (pluginVariables.ANDROID_FIREBASE_CONFIG_FILEPATH) PLATFORM.ANDROID.src = [pluginVariables.ANDROID_FIREBASE_CONFIG_FILEPATH];
+    if (pluginVariables.IOS_FIREBASE_CONFIG_FILEPATH) PLATFORM.IOS.src = [pluginVariables.IOS_FIREBASE_CONFIG_FILEPATH];
 };
 
 module.exports = function (context) {
@@ -127,7 +131,10 @@ module.exports = function (context) {
                 },
                 _text: accentColor
             };
-            if($resources.color.length){
+            if($resources.color && Object.keys($resources.color).length){
+                if(typeof $resources.color.length === 'undefined'){
+                    $resources.color = [$resources.color];
+                }
                 $resources.color.push($accentColor)
             }else{
                 $resources.color = $accentColor;
