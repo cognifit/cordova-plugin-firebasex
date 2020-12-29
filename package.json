@@ -1,7 +1,7 @@
 {
-  "name": "cordova-plugin-firebasex",
+  "name": "@cognifit/cordova-plugin-firebasex",
   "version": "10.1.2",
-  "description": "Cordova plugin for Google Firebase",
+  "description": "CogniFit's fork of cordova-plugin-firebasex\nCordova plugin for Google Firebase",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Dave Alden"
@@ -9,7 +9,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dpa99c/cordova-plugin-firebase"
+    "url": "https://github.com/cognifit/cordova-plugin-firebase"
   },
   "cordova": {
     "id": "cordova-plugin-firebase",

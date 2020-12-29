@@ -2,10 +2,10 @@
 <plugin id="cordova-plugin-firebasex" version="10.1.2"
 		xmlns="http://apache.org/cordova/ns/plugins/1.0"
 		xmlns:android="http://schemas.android.com/apk/res/android">
-	<name>Google Firebase Plugin</name>
+	<name>CogniFit's fork of cordova-plugin-firebasex</name>
 
 	<license>MIT</license>
-    
+
 	<dependency id="cordova-plugin-androidx-adapter" version="^1.1.1" />
 
 	<engines>
