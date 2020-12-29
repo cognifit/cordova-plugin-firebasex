@@ -2,7 +2,7 @@
 <plugin id="cordova-plugin-firebasex" version="7.0.1"
 		xmlns="http://apache.org/cordova/ns/plugins/1.0"
 		xmlns:android="http://schemas.android.com/apk/res/android">
-	<name>Google Firebase Plugin</name>
+	<name>CogniFit's fork of cordova-plugin-firebasex</name>
 
 	<license>MIT</license>
 
