@@ -14,7 +14,6 @@
 @end
 
 #define kApplicationInBackgroundKey @"applicationInBackground"
-#define kDelegateKey @"delegate"
 
 @implementation AppDelegate (FirebasePlugin)
 
@@ -28,14 +27,6 @@ static NSDictionary* mutableUserInfo;
 static FIRAuthStateDidChangeListenerHandle authStateChangeListener;
 static bool authStateChangeListenerInitialized = false;
 static bool shouldEstablishDirectChannel = false;
-
-- (void)setDelegate:(id)delegate {
-    objc_setAssociatedObject(self, kDelegateKey, delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-
-- (id)delegate {
-    return objc_getAssociatedObject(self, kDelegateKey);
-}
 
 + (void)load {
     Method original = class_getInstanceMethod(self, @selector(application:didFinishLaunchingWithOptions:));
@@ -109,10 +100,6 @@ static bool shouldEstablishDirectChannel = false;
                 [FirebasePlugin.firebasePlugin handlePluginExceptionWithoutContext:exception];
             }
         }];
-        
-        // Set UNUserNotificationCenter delegate
-        self.delegate = [UNUserNotificationCenter currentNotificationCenter].delegate;
-        [UNUserNotificationCenter currentNotificationCenter].delegate = self;
 
         // Set NSNotificationCenter observer
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tokenRefreshNotification:)
@@ -151,10 +138,10 @@ didSignInForUser:(GIDGoogleUser *)user
             [FIRGoogleAuthProvider credentialWithIDToken:authentication.idToken
                                            accessToken:authentication.accessToken];
             
-            int key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
+            NSNumber* key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
             NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
             [result setValue:@"true" forKey:@"instantVerification"];
-            [result setValue:[NSNumber numberWithInt:key] forKey:@"id"];
+            [result setValue:key forKey:@"id"];
             pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
         } else {
           pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.description];
@@ -409,14 +396,6 @@ didDisconnectWithUser:(GIDGoogleUser *)user
     return;
     
     @try{
-        if(center == nil){
-            center = [UNUserNotificationCenter currentNotificationCenter];
-        }
-        if(center != nil){
-            [self.delegate userNotificationCenter:center
-            willPresentNotification:notification
-              withCompletionHandler:completionHandler];
-        }
 
         if (![notification.request.trigger isKindOfClass:UNPushNotificationTrigger.class] && ![notification.request.trigger isKindOfClass:UNTimeIntervalNotificationTrigger.class]){
             [FirebasePlugin.firebasePlugin _logError:@"willPresentNotification: aborting as not a supported UNNotificationTrigger"];
@@ -496,14 +475,6 @@ didDisconnectWithUser:(GIDGoogleUser *)user
     return;
 
     @try{
-        if(center == nil){
-            center = [UNUserNotificationCenter currentNotificationCenter];
-        }
-        if(center != nil){
-            [self.delegate userNotificationCenter:center
-            didReceiveNotificationResponse:response
-                     withCompletionHandler:completionHandler];
-        }
         
         if (![response.notification.request.trigger isKindOfClass:UNPushNotificationTrigger.class] && ![response.notification.request.trigger isKindOfClass:UNTimeIntervalNotificationTrigger.class]){
             [FirebasePlugin.firebasePlugin _logMessage:@"didReceiveNotificationResponse: aborting as not a supported UNNotificationTrigger"];
@@ -575,10 +546,10 @@ didDisconnectWithUser:(GIDGoogleUser *)user
                         IDToken:idToken
                         rawNonce:rawNonce];
                     
-                    int key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
+                    NSNumber* key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
                     NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
                     [result setValue:@"true" forKey:@"instantVerification"];
-                    [result setValue:[NSNumber numberWithInt:key] forKey:@"id"];
+                    [result setValue:key forKey:@"id"];
                     pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
                 }
             }
