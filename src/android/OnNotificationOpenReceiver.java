@@ -31,6 +31,8 @@ public class OnNotificationOpenReceiver extends BroadcastReceiver {
 
             launchIntent.putExtras(data);
             context.startActivity(launchIntent);
+            
+            storeNotificationInLocalNotificationsStack(data);
         }catch (Exception e){
             FirebasePlugin.handleExceptionWithoutContext(e);
         }
