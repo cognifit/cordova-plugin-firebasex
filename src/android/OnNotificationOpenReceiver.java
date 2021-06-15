@@ -8,7 +8,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.cognifit.localnotifications.LocalNotificationsPlugin;
+import java.lang.reflect.Method;
 
 public class OnNotificationOpenReceiver extends BroadcastReceiver {
 
@@ -28,12 +28,23 @@ public class OnNotificationOpenReceiver extends BroadcastReceiver {
             Log.d(FirebasePlugin.TAG, "OnNotificationOpenReceiver.onReceive(): "+data.toString());
 
             FirebasePlugin.sendMessage(data, context);
-            LocalNotificationsPlugin.storeNotificationBundle(data);
 
             launchIntent.putExtras(data);
             context.startActivity(launchIntent);
+            
+            storeNotificationInLocalNotificationsStack(data);
         }catch (Exception e){
             FirebasePlugin.handleExceptionWithoutContext(e);
+        }
+    }
+    
+    private void storeNotificationInLocalNotificationsStack(Bundle bundle) {
+        try {
+            Class<?> localNotificationsPluginClass = Class.forName("com.cognifit.localnotifications.LocalNotificationsPlugin");
+            Method method = localNotificationsPluginClass.getDeclaredMethod("storeNotificationBundle", Bundle.class);
+            method.invoke(localNotificationsPluginClass, bundle);
+        } catch (Exception e) {
+
         }
     }
 }
