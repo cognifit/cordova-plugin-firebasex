@@ -18,7 +18,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -36,6 +35,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import androidx.core.app.NotificationCompat;
+
+import com.salesforce.marketingcloud.cordova.MCCordovaPlugin;
 
 public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
@@ -159,7 +160,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     priority = data.get("notification_android_priority");
 
                 if (FirebasePlugin.inBackground()) {
-                    showMarketingCloudNotification(data, remoteMessage.getMessageId());
+                    showMarketingCloudNotification(data, remoteMessage.getMessageId(), remoteMessage);
                 } else {
                     FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
                 }
@@ -374,15 +375,12 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void showMarketingCloudNotification(Map<String, String> data, String messageId) {
-        String marketingCloudChannelId = "com.salesforce.marketingcloud.DEFAULT_CHANNEL";
-        String firebaseIntentAction = "com.google.firebase.MESSAGING_EVENT"; // <- see in the Manifest
-
+    private void showMarketingCloudNotification(Map<String, String> data, String messageId, RemoteMessage remoteMessage) {
         String title = (data.containsKey("title") ? data.get("title") : null);
         String message = (data.containsKey("alert") ? data.get("alert") : null);
 
         if (title != null && message != null) {
-            data.put("channel_id", marketingCloudChannelId);
+            data.put("channel_id", "com.salesforce.marketingcloud.DEFAULT_CHANNEL");
 
             Bundle bundle = new Bundle();
             for (String key : data.keySet()) {
@@ -397,42 +395,10 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             bundle.putString("title", title);
             bundle.putString("body", message);
 
-            Intent myIntent = new Intent(this, OnNotificationOpenReceiver.class);
-            myIntent.setAction(firebaseIntentAction);
-            myIntent.putExtras(bundle);
-
-            PendingIntent myPendingIntent = PendingIntent.getBroadcast(this, messageId.hashCode(), myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            int notificationIconResourceId = getResources().getIdentifier(defaultSmallIconName, "drawable", getPackageName());
-            if (notificationIconResourceId == 0) {
-                notificationIconResourceId = getApplicationInfo().icon;
-            }
-
-            Notification.Builder builder = new Notification.Builder(this)
-                    .setContentTitle(title)
-                    .setContentText(message)
-                    .setSmallIcon(notificationIconResourceId)
-                    .setContentIntent(myPendingIntent)
-                    .setAutoCancel(true);
-
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                builder.setChannelId(marketingCloudChannelId);
-                builder.setVisibility((int) NotificationCompat.VISIBILITY_PUBLIC);
-            }
-
-            try {
-                String mediaUrl = data.get("_mediaUrl");
-                String targetUrl = data.get("_od");
-                this.addLargeIconToBuilder(builder, mediaUrl, targetUrl);
-            } catch (IOException e) {
-                // silently ignored, if we can't set an image it is not the end of the world
-            }
-
-            Notification myNotification = builder.build();
-            NotificationManager myNotificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-            myNotificationManager.notify(messageId.hashCode(), myNotification);
-
             storeNotification(bundle);
+
+            MCCordovaPlugin marketingCloudPlugin = (MCCordovaPlugin) FirebasePlugin.instance.webView.getPluginManager().getPlugin("MCCordovaPlugin");
+            marketingCloudPlugin.handlePushNotification(remoteMessage);
         }
     }
 
