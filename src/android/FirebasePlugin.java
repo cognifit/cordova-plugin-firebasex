@@ -182,7 +182,7 @@ public class FirebasePlugin extends CordovaPlugin {
                     authStateListener = new AuthStateListener();
                     FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
 
-                    firestore = FirebaseFirestore.getInstance();                  
+                    firestore = FirebaseFirestore.getInstance();
                     functions = FirebaseFunctions.getInstance();
 
                     gson = new GsonBuilder()
@@ -2017,10 +2017,11 @@ public class FirebasePlugin extends CordovaPlugin {
     }
 
     protected static void createDefaultChannel() throws JSONException {
-        JSONObject options = new JSONObject();
-        options.put("id", defaultChannelId);
-        options.put("name", defaultChannelName);
-        createDefaultChannel(options);
+        // don't, we use only the Marketing Cloud channel
+//         JSONObject options = new JSONObject();
+//         options.put("id", defaultChannelId);
+//         options.put("name", defaultChannelName);
+//         createDefaultChannel(options);
     }
 
     protected static void createDefaultChannel(final JSONObject options) throws JSONException {
