@@ -354,7 +354,11 @@ static bool authStateChangeListenerInitialized = false;
         enters an infinite recursion that makes the App crash
         As we don't need to support both push notification systems we simply disable all the Firebase
         code and simply call Marketing Cloud
+
+        notifications received through this method were received while the app was in the foreground
+        we pass a flag set to true to signal this to the Marketing Cloud plugin
      */
+    objc_setAssociatedObject(notification.request, (__bridge void *) [MarketingCloudSDK sharedInstance], @(true), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:notification.request];
     completionHandler(UNNotificationPresentationOptionSound);
 
