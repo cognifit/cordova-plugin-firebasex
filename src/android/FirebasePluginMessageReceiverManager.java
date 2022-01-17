@@ -28,14 +28,14 @@ public class FirebasePluginMessageReceiverManager {
     }
 
     public static boolean sendMessage(Bundle bundle) {
-            boolean handled = false;
-            for (FirebasePluginMessageReceiver receiver : receivers) {
-                boolean wasHandled = receiver.sendMessage(bundle);
-                if (wasHandled) {
-                    handled = true;
-                }
+        boolean handled = false;
+        for (FirebasePluginMessageReceiver receiver : receivers) {
+            boolean wasHandled = receiver.sendMessage(bundle);
+            if (wasHandled) {
+                handled = true;
             }
-
-            return handled;
         }
+
+        return handled;
+    }
 }

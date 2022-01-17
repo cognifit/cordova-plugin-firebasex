@@ -58,11 +58,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
      */
     @Override
     public void onNewToken(String refreshedToken) {
-        try{
+        try {
             super.onNewToken(refreshedToken);
             Log.d(TAG, "Refreshed token: " + refreshedToken);
             FirebasePlugin.sendToken(refreshedToken);
-        }catch (Exception e){
+        } catch (Exception e) {
             FirebasePlugin.handleExceptionWithoutContext(e);
         }
     }
@@ -79,7 +79,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
      */
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        try{
+        try {
             // [START_EXCLUDE]
             // There are two types of messages data messages and notification messages. Data messages are handled
             // here in onMessageReceived whether the app is in the foreground or background. Data messages are the type
@@ -99,7 +99,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 return;
             }
 
-            if(FirebasePlugin.applicationContext == null){
+            if (FirebasePlugin.applicationContext == null) {
                 FirebasePlugin.applicationContext = this.getApplicationContext();
             }
 
@@ -135,27 +135,36 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 sound = notification.getSound();
                 color = notification.getColor();
                 icon = notification.getIcon();
-            }else{
+            } else {
                 Log.i(TAG, "Received message: data");
                 messageType = "data";
             }
 
             if (data != null) {
                 // Data message payload
-                if(data.containsKey("notification_foreground")){
+                if (data.containsKey("notification_foreground")) {
                     foregroundNotification = true;
                 }
-                if(data.containsKey("notification_title")) title = data.get("notification_title");
-                if(data.containsKey("notification_body")) body = data.get("notification_body");
-                if(data.containsKey("notification_android_channel_id")) channelId = data.get("notification_android_channel_id");
-                if(data.containsKey("notification_android_id")) id = data.get("notification_android_id");
-                if(data.containsKey("notification_android_sound")) sound = data.get("notification_android_sound");
-                if(data.containsKey("notification_android_vibrate")) vibrate = data.get("notification_android_vibrate");
-                if(data.containsKey("notification_android_light")) light = data.get("notification_android_light"); //String containing hex ARGB color, miliseconds on, miliseconds off, example: '#FFFF00FF,1000,3000'
-                if(data.containsKey("notification_android_color")) color = data.get("notification_android_color");
-                if(data.containsKey("notification_android_icon")) icon = data.get("notification_android_icon");
-                if(data.containsKey("notification_android_visibility")) visibility = data.get("notification_android_visibility");
-                if(data.containsKey("notification_android_priority")) priority = data.get("notification_android_priority");
+                if (data.containsKey("notification_title")) title = data.get("notification_title");
+                if (data.containsKey("notification_body")) body = data.get("notification_body");
+                if (data.containsKey("notification_android_channel_id"))
+                    channelId = data.get("notification_android_channel_id");
+                if (data.containsKey("notification_android_id"))
+                    id = data.get("notification_android_id");
+                if (data.containsKey("notification_android_sound"))
+                    sound = data.get("notification_android_sound");
+                if (data.containsKey("notification_android_vibrate"))
+                    vibrate = data.get("notification_android_vibrate");
+                if (data.containsKey("notification_android_light"))
+                    light = data.get("notification_android_light"); //String containing hex ARGB color, miliseconds on, miliseconds off, example: '#FFFF00FF,1000,3000'
+                if (data.containsKey("notification_android_color"))
+                    color = data.get("notification_android_color");
+                if (data.containsKey("notification_android_icon"))
+                    icon = data.get("notification_android_icon");
+                if (data.containsKey("notification_android_visibility"))
+                    visibility = data.get("notification_android_visibility");
+                if (data.containsKey("notification_android_priority"))
+                    priority = data.get("notification_android_priority");
 
                 if (FirebasePlugin.inBackground()) {
                     showMarketingCloudNotification(data, remoteMessage.getMessageId());
@@ -188,13 +197,13 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 boolean showNotification = (FirebasePlugin.inBackground() || !FirebasePlugin.hasNotificationsCallback() || foregroundNotification) && (!TextUtils.isEmpty(body) || !TextUtils.isEmpty(title));
                 sendMessage(remoteMessage, data, messageType, id, title, body, showNotification, sound, vibrate, light, color, icon, channelId, priority, visibility);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             FirebasePlugin.handleExceptionWithoutContext(e);
         }
     }
 
     private void sendMessage(RemoteMessage remoteMessage, Map<String, String> data, String messageType, String id, String title, String body, boolean showNotification, String sound, String vibrate, String light, String color, String icon, String channelId, String priority, String visibility) {
-        Log.d(TAG, "sendMessage(): messageType="+messageType+"; showNotification="+showNotification+"; id="+id+"; title="+title+"; body="+body+"; sound="+sound+"; vibrate="+vibrate+"; light="+light+"; color="+color+"; icon="+icon+"; channel="+channelId+"; data="+data.toString());
+        Log.d(TAG, "sendMessage(): messageType=" + messageType + "; showNotification=" + showNotification + "; id=" + id + "; title=" + title + "; body=" + body + "; sound=" + sound + "; vibrate=" + vibrate + "; light=" + light + "; color=" + color + "; icon=" + icon + "; channel=" + channelId + "; data=" + data.toString());
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
             bundle.putString(key, data.get(key));
@@ -223,11 +232,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             PendingIntent pendingIntent = PendingIntent.getBroadcast(this, id.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             // Channel
-            if(channelId == null || !FirebasePlugin.channelExists(channelId)){
+            if (channelId == null || !FirebasePlugin.channelExists(channelId)) {
                 channelId = FirebasePlugin.defaultChannelId;
             }
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-                Log.d(TAG, "Channel ID: "+channelId);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.d(TAG, "Channel ID: " + channelId);
             }
 
             NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, channelId);
@@ -239,16 +248,16 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     .setContentIntent(pendingIntent);
 
             // On Android O+ the sound/lights/vibration are determined by the channel ID
-            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.O){
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 // Sound
                 if (sound == null) {
                     Log.d(TAG, "Sound: none");
-                }else if (sound.equals("default")) {
+                } else if (sound.equals("default")) {
                     notificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
                     Log.d(TAG, "Sound: default");
-                }else{
+                } else {
                     Uri soundPath = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/raw/" + sound);
-                    Log.d(TAG, "Sound: custom=" + sound+"; path="+soundPath.toString());
+                    Log.d(TAG, "Sound: custom=" + sound + "; path=" + soundPath.toString());
                     notificationBuilder.setSound(soundPath);
                 }
 
@@ -261,24 +270,25 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                             int lightOnMs = Integer.parseInt(lightsComponents[1]);
                             int lightOffMs = Integer.parseInt(lightsComponents[2]);
                             notificationBuilder.setLights(lightArgb, lightOnMs, lightOffMs);
-                            Log.d(TAG, "Lights: color="+lightsComponents[0]+"; on(ms)="+lightsComponents[2]+"; off(ms)="+lightsComponents[3]);
+                            Log.d(TAG, "Lights: color=" + lightsComponents[0] + "; on(ms)=" + lightsComponents[2] + "; off(ms)=" + lightsComponents[3]);
                         }
 
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                    }
                 }
 
                 // Vibrate
-                if (vibrate != null){
+                if (vibrate != null) {
                     try {
                         String[] sVibrations = vibrate.replaceAll("\\s", "").split(",");
                         long[] lVibrations = new long[sVibrations.length];
-                        int i=0;
-                        for(String sVibration: sVibrations){
+                        int i = 0;
+                        for (String sVibration : sVibrations) {
                             lVibrations[i] = Integer.parseInt(sVibration.trim());
                             i++;
                         }
                         notificationBuilder.setVibrate(lVibrations);
-                        Log.d(TAG, "Vibrate: "+vibrate);
+                        Log.d(TAG, "Vibrate: " + vibrate);
                     } catch (Exception e) {
                         Log.e(TAG, e.getMessage());
                     }
@@ -289,15 +299,15 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             // Icon
             int defaultSmallIconResID = getResources().getIdentifier(defaultSmallIconName, "drawable", getPackageName());
             int customSmallIconResID = 0;
-            if(icon != null){
+            if (icon != null) {
                 customSmallIconResID = getResources().getIdentifier(icon, "drawable", getPackageName());
             }
 
             if (customSmallIconResID != 0) {
                 notificationBuilder.setSmallIcon(customSmallIconResID);
-                Log.d(TAG, "Small icon: custom="+icon);
-            }else if (defaultSmallIconResID != 0) {
-                Log.d(TAG, "Small icon: default="+defaultSmallIconName);
+                Log.d(TAG, "Small icon: custom=" + icon);
+            } else if (defaultSmallIconResID != 0) {
+                Log.d(TAG, "Small icon: default=" + defaultSmallIconName);
                 notificationBuilder.setSmallIcon(defaultSmallIconResID);
             } else {
                 Log.d(TAG, "Small icon: application");
@@ -307,30 +317,30 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                 int defaultLargeIconResID = getResources().getIdentifier(defaultLargeIconName, "drawable", getPackageName());
                 int customLargeIconResID = 0;
-                if(icon != null){
-                    customLargeIconResID = getResources().getIdentifier(icon+"_large", "drawable", getPackageName());
+                if (icon != null) {
+                    customLargeIconResID = getResources().getIdentifier(icon + "_large", "drawable", getPackageName());
                 }
 
                 int largeIconResID;
                 if (customLargeIconResID != 0 || defaultLargeIconResID != 0) {
-					if (customLargeIconResID != 0) {
-	                    largeIconResID = customLargeIconResID;
-	                    Log.d(TAG, "Large icon: custom="+icon);
-	                }else{
-	                    Log.d(TAG, "Large icon: default="+defaultLargeIconName);
-	                    largeIconResID = defaultLargeIconResID;
-	                }
-	                notificationBuilder.setLargeIcon(BitmapFactory.decodeResource(getApplicationContext().getResources(), largeIconResID));
+                    if (customLargeIconResID != 0) {
+                        largeIconResID = customLargeIconResID;
+                        Log.d(TAG, "Large icon: custom=" + icon);
+                    } else {
+                        Log.d(TAG, "Large icon: default=" + defaultLargeIconName);
+                        largeIconResID = defaultLargeIconResID;
+                    }
+                    notificationBuilder.setLargeIcon(BitmapFactory.decodeResource(getApplicationContext().getResources(), largeIconResID));
                 }
             }
 
             // Color
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                 int defaultColor = getResources().getColor(getResources().getIdentifier("accent", "color", getPackageName()), null);
-                if(color != null){
+                if (color != null) {
                     notificationBuilder.setColor(Color.parseColor(color));
-                    Log.d(TAG, "Color: custom="+color);
-                }else{
+                    Log.d(TAG, "Color: custom=" + color);
+                } else {
                     Log.d(TAG, "Color: default");
                     notificationBuilder.setColor(defaultColor);
                 }
@@ -338,7 +348,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
             // Visibility
             int iVisibility = NotificationCompat.VISIBILITY_PUBLIC;
-            if(visibility != null){
+            if (visibility != null) {
                 iVisibility = Integer.parseInt(visibility);
             }
             Log.d(TAG, "Visibility: " + iVisibility);
@@ -346,7 +356,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
             // Priority
             int iPriority = NotificationCompat.PRIORITY_MAX;
-            if(priority != null){
+            if (priority != null) {
                 iPriority = Integer.parseInt(priority);
             }
             Log.d(TAG, "Priority: " + iPriority);
@@ -358,15 +368,15 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
             // Display notification
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            Log.d(TAG, "show notification: "+notification.toString());
+            Log.d(TAG, "show notification: " + notification.toString());
             notificationManager.notify(id.hashCode(), notification);
         }
         // Send to plugin
         FirebasePlugin.sendMessage(bundle, this.getApplicationContext());
     }
 
-    private void putKVInBundle(String k, String v, Bundle b){
-        if(v != null && !b.containsKey(k)){
+    private void putKVInBundle(String k, String v, Bundle b) {
+        if (v != null && !b.containsKey(k)) {
             b.putString(k, v);
         }
     }
