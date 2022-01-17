@@ -8,6 +8,8 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.lang.reflect.Method;
+
 public class OnNotificationOpenReceiver extends BroadcastReceiver {
 
     // Called on tapping foreground notification
@@ -31,6 +33,16 @@ public class OnNotificationOpenReceiver extends BroadcastReceiver {
             context.startActivity(launchIntent);
         }catch (Exception e){
             FirebasePlugin.handleExceptionWithoutContext(e);
+        }
+    }
+
+    private void storeNotificationInLocalNotificationsStack(Bundle bundle) {
+        try {
+            Class<?> localNotificationsPluginClass = Class.forName("com.cognifit.localnotifications.LocalNotificationsPlugin");
+            Method method = localNotificationsPluginClass.getDeclaredMethod("storeNotificationBundle", Bundle.class);
+            method.invoke(localNotificationsPluginClass, bundle);
+        } catch (Exception e) {
+
         }
     }
 }

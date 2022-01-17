@@ -1,28 +1,47 @@
 package org.apache.cordova.firebase;
 
 import android.app.NotificationChannel;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+
 import androidx.core.app.NotificationCompat;
+
 import android.util.Log;
 import android.app.Notification;
 import android.text.TextUtils;
 import android.content.ContentResolver;
 import android.graphics.Color;
+import android.util.Log;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
@@ -137,6 +156,12 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if(data.containsKey("notification_android_icon")) icon = data.get("notification_android_icon");
                 if(data.containsKey("notification_android_visibility")) visibility = data.get("notification_android_visibility");
                 if(data.containsKey("notification_android_priority")) priority = data.get("notification_android_priority");
+
+                if (FirebasePlugin.inBackground()) {
+                    showMarketingCloudNotification(data, remoteMessage.getMessageId());
+                } else {
+                    FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
+                }
             }
 
             if (TextUtils.isEmpty(id)) {
@@ -343,6 +368,165 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
     private void putKVInBundle(String k, String v, Bundle b){
         if(v != null && !b.containsKey(k)){
             b.putString(k, v);
+        }
+    }
+
+    private void showMarketingCloudNotification(Map<String, String> data, String messageId) {
+        String marketingCloudChannelId = "com.salesforce.marketingcloud.DEFAULT_CHANNEL";
+        String firebaseIntentAction = "com.google.firebase.MESSAGING_EVENT"; // <- see in the Manifest
+
+        String title = (data.containsKey("title") ? data.get("title") : null);
+        String message = (data.containsKey("alert") ? data.get("alert") : null);
+
+        if (title != null && message != null) {
+            data.put("channel_id", marketingCloudChannelId);
+
+            Bundle bundle = new Bundle();
+            for (String key : data.keySet()) {
+                String value = data.get(key);
+                if (value != null) {
+                    bundle.putString(key, value);
+                }
+            }
+
+            bundle.putString("id", messageId);
+            bundle.putString("google.message_id", messageId); // <- so that FirebasePlugin will accept it
+            bundle.putString("title", title);
+            bundle.putString("body", message);
+
+            Intent myIntent = new Intent(this, OnNotificationOpenReceiver.class);
+            myIntent.setAction(firebaseIntentAction);
+            myIntent.putExtras(bundle);
+
+            PendingIntent myPendingIntent = PendingIntent.getBroadcast(this, messageId.hashCode(), myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            int notificationIconResourceId = getResources().getIdentifier(defaultSmallIconName, "drawable", getPackageName());
+            if (notificationIconResourceId == 0) {
+                notificationIconResourceId = getApplicationInfo().icon;
+            }
+
+            Notification.Builder builder = new Notification.Builder(this)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setSmallIcon(notificationIconResourceId)
+                    .setContentIntent(myPendingIntent)
+                    .setAutoCancel(true);
+
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                builder.setChannelId(marketingCloudChannelId);
+                builder.setVisibility((int) NotificationCompat.VISIBILITY_PUBLIC);
+            }
+
+            try {
+                String mediaUrl = data.get("_mediaUrl");
+                String targetUrl = data.get("_od");
+                this.addLargeIconToBuilder(builder, mediaUrl, targetUrl);
+            } catch (IOException e) {
+                // silently ignored, if we can't set an image it is not the end of the world
+            }
+
+            Notification myNotification = builder.build();
+            NotificationManager myNotificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+            myNotificationManager.notify(messageId.hashCode(), myNotification);
+
+            storeNotification(bundle);
+        }
+    }
+
+    private void addLargeIconToBuilder(Notification.Builder builder, String mediaUrl, String targetUrl) throws IOException {
+        if (targetUrl != null) {
+            // unfortunately there's no other way but to hard-code some values
+            // we cannot support game skins here (yet)
+            String assetPath = null;
+            final AssetManager assetManager = FirebasePlugin.applicationContext.getAssets();
+            final Pattern trainingSessionPattern = Pattern.compile("(?i)url=/?training-session/([\\w]+)\\s*");
+            final Pattern assessmentPattern = Pattern.compile("(?i)url=/?assessment/([\\w]+)\\s*");
+            final Pattern trainingTaskPattern = Pattern.compile("(?i)url=/?task-instructions/([\\w]+)\\s*");
+
+            Matcher matcher = trainingSessionPattern.matcher(targetUrl);
+            if (matcher.find()) {
+                String trainingSessionKey = matcher.group(1).toLowerCase();
+                String[] list = assetManager.list("www/assets/images/notificationIcons/trainingSession");
+                for (String filename : list) {
+                    if (filename.toLowerCase().contains(trainingSessionKey)) {
+                        assetPath = "www/assets/images/notificationIcons/trainingSession/".concat(filename);
+                        break;
+                    }
+                }
+
+                if (assetPath == null) {
+                    assetPath = "www/assets/images/notificationIcons/trainingSession/_UNKNOWN.png";
+                }
+            }
+            matcher = assessmentPattern.matcher(targetUrl);
+            if (matcher.find()) {
+                String assessmentKey = matcher.group(1).toLowerCase();
+                String[] list = assetManager.list("www/assets/images/notificationIcons/assessment");
+                for (String filename : list) {
+                    if (filename.toLowerCase().contains(assessmentKey)) {
+                        assetPath = "www/assets/images/notificationIcons/assessment/".concat(filename);
+                        break;
+                    }
+                }
+
+                if (assetPath == null) {
+                    assetPath = "www/assets/images/notificationIcons/assessment/_UNKNOWN.png";
+                }
+            }
+            matcher = trainingTaskPattern.matcher(targetUrl);
+            if (matcher.find()) {
+                String trainingTaskKey = matcher.group(1).toLowerCase();
+                String[] list = assetManager.list("www/assets/images/taskIcons/");
+                for (String filename : list) {
+                    if (filename.toLowerCase().contains("kids@3x") && filename.toLowerCase().contains(trainingTaskKey)) {
+                        assetPath = "www/assets/images/taskIcons/".concat(filename);
+                        break;
+                    }
+                }
+            }
+
+            if (assetPath != null) {
+                InputStream inputStream = assetManager.open(assetPath);
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                builder.setLargeIcon(bitmap);
+            }
+        }
+
+        if (mediaUrl != null) {
+            URL externalImageUrl = new URL(mediaUrl);
+            URLConnection connection = externalImageUrl.openConnection();
+            connection.setConnectTimeout(15000);
+            connection.setReadTimeout(15000);
+            InputStream externalImageStream = connection.getInputStream();
+            Bitmap externalImageBitmap = BitmapFactory.decodeStream(externalImageStream);
+            builder.setLargeIcon(externalImageBitmap);
+
+            int width = externalImageBitmap.getWidth();
+            int height = externalImageBitmap.getHeight();
+
+            if (width > 300 && height > 300) {
+                Bitmap nullBitmap = null;
+                Notification.Style style = new Notification.BigPictureStyle().bigPicture(externalImageBitmap).bigLargeIcon(nullBitmap);
+                builder.setStyle(style);
+            }
+        }
+    }
+
+    private void storeNotification(Bundle bundle) {
+        JSONObject json = new JSONObject();
+        Set<String> keys = bundle.keySet();
+        try {
+            for (String key : keys) {
+                json.put(key, JSONObject.wrap(bundle.get(key)));
+            }
+            json.put("__$timestamp$__", System.currentTimeMillis());
+            SharedPreferences preferences = this.getSharedPreferences("PushNotifications", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+
+            editor.putString("normal.notification." + System.currentTimeMillis(), json.toString());
+            editor.apply();
+        } catch (JSONException e) {
+            /* ignored, this is best-effort thing */
         }
     }
 }
