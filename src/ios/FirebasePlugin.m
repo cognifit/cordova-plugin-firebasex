@@ -83,7 +83,8 @@ static NSMutableDictionary* traces;
         // Check for permission and register for remote notifications if granted
         [self _hasPermission:^(BOOL result) {}];
 
-        [GIDSignIn sharedInstance].presentingViewController = self.viewController;
+        // COGNIFIT DISABLED: we use our own code/plugin
+        // [GIDSignIn sharedInstance].presentingViewController = self.viewController;
 
         authCredentials = [[NSMutableDictionary alloc] init];
         firestoreListeners = [[NSMutableDictionary alloc] init];
@@ -135,7 +136,7 @@ static NSMutableDictionary* traces;
 
         // Initialize categories
         [[UNUserNotificationCenter currentNotificationCenter] setNotificationCategories:categories];
-        
+
         // Initialize installation ID change listner
         __weak __auto_type weakSelf = self;
         self.installationIDObserver = [[NSNotificationCenter defaultCenter]
@@ -306,7 +307,7 @@ static NSMutableDictionary* traces;
                             authOptions = authOptions|UNAuthorizationOptionProvidesAppNotificationSettings;
                         }
                     }
-                
+
                     [[UNUserNotificationCenter currentNotificationCenter]
                      requestAuthorizationWithOptions:authOptions
                      completionHandler:^(BOOL granted, NSError * _Nullable error) {
@@ -662,14 +663,17 @@ static NSMutableDictionary* traces;
 }
 
 - (void)authenticateUserWithGoogle:(CDVInvokedUrlCommand*)command{
-    @try {
-        self.googleSignInCallbackId = command.callbackId;
-        [[GIDSignIn sharedInstance] signIn];
-
-        [self sendPluginNoResultAndKeepCallback:command callbackId:command.callbackId];
-    }@catch (NSException *exception) {
-        [self handlePluginExceptionWithContext:exception :command];
-    }
+    // COGNIFIT DISABLED: we use our own code/plugin
+    NSException *exception = [[NSException alloc] initWithName:@"CogniFit" reason:@"Google Sign In not supported" userInfo:nil];
+    [self handlePluginExceptionWithContext:exception :command];
+//     @try {
+//         self.googleSignInCallbackId = command.callbackId;
+//         [[GIDSignIn sharedInstance] signIn];
+//
+//         [self sendPluginNoResultAndKeepCallback:command callbackId:command.callbackId];
+//     }@catch (NSException *exception) {
+//         [self handlePluginExceptionWithContext:exception :command];
+//     }
 }
 
 - (void)authenticateUserWithApple:(CDVInvokedUrlCommand*)command{
@@ -1468,7 +1472,7 @@ static NSMutableDictionary* traces;
     [self.commandDelegate runInBackground:^{
         @try {
             NSString* traceName = [command.arguments objectAtIndex:0];
-            
+
             @synchronized (traces) {
                 FIRTrace* trace = [traces objectForKey:traceName];
 
@@ -1477,7 +1481,7 @@ static NSMutableDictionary* traces;
                     [traces setObject:trace forKey:traceName ];
                 }
             }
-            
+
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }@catch (NSException *exception) {
@@ -1981,7 +1985,7 @@ static NSMutableDictionary* traces;
 
 - (void) getInstallationToken:(CDVInvokedUrlCommand*)command {
     [self.commandDelegate runInBackground:^{
-        @try {            
+        @try {
             [[FIRInstallations installations] authTokenForcingRefresh:true
                                                            completion:^(FIRInstallationsAuthTokenResult *result, NSError *error) {
               if (error != nil) {
