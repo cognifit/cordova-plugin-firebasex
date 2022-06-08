@@ -90,7 +90,6 @@ static NSMutableDictionary* traces;
         // Check for permission and register for remote notifications if granted
         [self _hasPermission:^(BOOL result) {}];
 
-
         authCredentials = [[NSMutableDictionary alloc] init];
         firestoreListeners = [[NSMutableDictionary alloc] init];
         traces = [[NSMutableDictionary alloc] init];
@@ -755,41 +754,45 @@ static NSMutableDictionary* traces;
 }
 
 - (void)authenticateUserWithGoogle:(CDVInvokedUrlCommand*)command{
-    @try {
-        __weak __auto_type weakSelf = self;
-        GIDConfiguration* googleSignInConfig = [[GIDConfiguration alloc] initWithClientID:[FIRApp defaultApp].options.clientID];
-        [GIDSignIn.sharedInstance signInWithConfiguration:googleSignInConfig presentingViewController:self.viewController callback:^(GIDGoogleUser * _Nullable user, NSError * _Nullable error) {
-          __auto_type strongSelf = weakSelf;
-          if (strongSelf == nil) { return; }
+    // COGNIFIT DISABLED: we use our own code/plugin
+    NSException *exception = [[NSException alloc] initWithName:@"CogniFit" reason:@"Google Sign In not supported" userInfo:nil];
+    [self handlePluginExceptionWithContext:exception :command];
 
-            @try{
-                CDVPluginResult* pluginResult;
-                if (error == nil) {
-                    GIDAuthentication *authentication = user.authentication;
-                    FIRAuthCredential *credential =
-                    [FIRGoogleAuthProvider credentialWithIDToken:authentication.idToken
-                                                   accessToken:authentication.accessToken];
+    // @try {
+    //     __weak __auto_type weakSelf = self;
+    //     GIDConfiguration* googleSignInConfig = [[GIDConfiguration alloc] initWithClientID:[FIRApp defaultApp].options.clientID];
+    //     [GIDSignIn.sharedInstance signInWithConfiguration:googleSignInConfig presentingViewController:self.viewController callback:^(GIDGoogleUser * _Nullable user, NSError * _Nullable error) {
+    //       __auto_type strongSelf = weakSelf;
+    //       if (strongSelf == nil) { return; }
 
-                    NSNumber* key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
-                    NSString *idToken = user.authentication.idToken;
-                    NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
-                    [result setValue:@"true" forKey:@"instantVerification"];
-                    [result setValue:key forKey:@"id"];
-                    [result setValue:idToken forKey:@"idToken"];
-                    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
-                } else {
-                  pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.description];
-                }
-                [[FirebasePlugin firebasePlugin].commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            }@catch (NSException *exception) {
-                [FirebasePlugin.firebasePlugin handlePluginExceptionWithoutContext:exception];
-            }
-        }];
+    //         @try{
+    //             CDVPluginResult* pluginResult;
+    //             if (error == nil) {
+    //                 GIDAuthentication *authentication = user.authentication;
+    //                 FIRAuthCredential *credential =
+    //                 [FIRGoogleAuthProvider credentialWithIDToken:authentication.idToken
+    //                                                accessToken:authentication.accessToken];
 
-        [self sendPluginNoResultAndKeepCallback:command callbackId:command.callbackId];
-    }@catch (NSException *exception) {
-        [self handlePluginExceptionWithContext:exception :command];
-    }
+    //                 NSNumber* key = [[FirebasePlugin firebasePlugin] saveAuthCredential:credential];
+    //                 NSString *idToken = user.authentication.idToken;
+    //                 NSMutableDictionary* result = [[NSMutableDictionary alloc] init];
+    //                 [result setValue:@"true" forKey:@"instantVerification"];
+    //                 [result setValue:key forKey:@"id"];
+    //                 [result setValue:idToken forKey:@"idToken"];
+    //                 pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
+    //             } else {
+    //               pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.description];
+    //             }
+    //             [[FirebasePlugin firebasePlugin].commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    //         }@catch (NSException *exception) {
+    //             [FirebasePlugin.firebasePlugin handlePluginExceptionWithoutContext:exception];
+    //         }
+    //     }];
+
+    //     [self sendPluginNoResultAndKeepCallback:command callbackId:command.callbackId];
+    // }@catch (NSException *exception) {
+    //     [self handlePluginExceptionWithContext:exception :command];
+    // }
 }
 
 - (void)authenticateUserWithApple:(CDVInvokedUrlCommand*)command{
