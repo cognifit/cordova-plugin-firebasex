@@ -228,7 +228,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void sendMessage(RemoteMessage remoteMessage, Map<String, String> data, String messageType, String id, String title, String body, boolean showNotification, String sound, String vibrate, String light, String color, String icon, String channelId, String priority, String visibility) {
+    private void sendMessage(RemoteMessage remoteMessage, Map<String, String> data, String messageType, String id, String title, String body, String bodyHtml, boolean showNotification, String sound, String vibrate, String light, String color, String icon, String channelId, String priority, String visibility, String image, String imageType) {
         Log.d(TAG, "sendMessage(): messageType=" + messageType + "; showNotification=" + showNotification + "; id=" + id + "; title=" + title + "; body=" + body + "; sound=" + sound + "; vibrate=" + vibrate + "; light=" + light + "; color=" + color + "; icon=" + icon + "; channel=" + channelId + "; data=" + data.toString());
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
