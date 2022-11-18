@@ -289,6 +289,9 @@ static bool authStateChangeListenerInitialized = false;
 - (BOOL)application:(nonnull UIApplication *)application
             openURL:(nonnull NSURL *)url
             options:(nonnull NSDictionary<NSString *, id> *)options {
+  
+  // Cordova's App Delegate stopped receiving this call, we use the notification instead
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification" object:url userInfo:options];
   return [[GIDSignIn sharedInstance] handleURL:url];
 }
 
