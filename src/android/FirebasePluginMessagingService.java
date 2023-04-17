@@ -191,10 +191,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if(data.containsKey("notification_android_image")) image = data.get("notification_android_image");
                 if(data.containsKey("notification_android_image_type")) imageType = data.get("notification_android_image_type");
 
-                if (FirebasePlugin.inBackground())
-                    showMarketingCloudNotification(data, remoteMessage.getMessageId());
-                else
-                    FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
+                // to-do: send the push notification to the plugin responsible for them
+                // if (FirebasePlugin.inBackground())
+                //    showMarketingCloudNotification(data, remoteMessage.getMessageId());
+                // else
+                //    FirebasePlugin.sendNotificationToMarketingCloudPlugin(data, remoteMessage.getMessageId(), true);
             }
 
             if (TextUtils.isEmpty(id)) {
@@ -469,68 +470,6 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
     private void putKVInBundle(String k, String v, Bundle b) {
         if (v != null && !b.containsKey(k)) {
             b.putString(k, v);
-        }
-    }
-
-    private void showMarketingCloudNotification(Map<String, String> data, String messageId) {
-        String marketingCloudChannelId = "com.salesforce.marketingcloud.DEFAULT_CHANNEL";
-        String firebaseIntentAction = "com.google.firebase.MESSAGING_EVENT"; // <- see in the Manifest
-
-        String title = (data.containsKey("title") ? data.get("title") : null);
-        String message = (data.containsKey("alert") ? data.get("alert") : null);
-
-        if (title != null && message != null) {
-            data.put("channel_id", marketingCloudChannelId);
-
-            Bundle bundle = new Bundle();
-            for (String key : data.keySet()) {
-                String value = data.get(key);
-                if (value != null) {
-                    bundle.putString(key, value);
-                }
-            }
-
-            bundle.putString("id", messageId);
-            bundle.putString("google.message_id", messageId); // <- so that FirebasePlugin will accept it
-            bundle.putString("title", title);
-            bundle.putString("body", message);
-
-            Intent myIntent = new Intent(this, OnNotificationOpenReceiver.class);
-            myIntent.setAction(firebaseIntentAction);
-            myIntent.putExtras(bundle);
-
-            PendingIntent myPendingIntent = PendingIntent.getBroadcast(this, messageId.hashCode(), myIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-            int notificationIconResourceId = getResources().getIdentifier(defaultSmallIconName, "drawable", getPackageName());
-            if (notificationIconResourceId == 0) {
-                notificationIconResourceId = getApplicationInfo().icon;
-            }
-
-            Notification.Builder builder = new Notification.Builder(this)
-                    .setContentTitle(title)
-                    .setContentText(message)
-                    .setSmallIcon(notificationIconResourceId)
-                    .setContentIntent(myPendingIntent)
-                    .setAutoCancel(true);
-
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                builder.setChannelId(marketingCloudChannelId);
-                builder.setVisibility((int) NotificationCompat.VISIBILITY_PUBLIC);
-            }
-
-            try {
-                String mediaUrl = data.get("_mediaUrl");
-                String targetUrl = data.get("_od");
-                this.addLargeIconToBuilder(builder, mediaUrl, targetUrl);
-            } catch (IOException e) {
-                // silently ignored, if we can't set an image it is not the end of the world
-            }
-
-            Notification myNotification = builder.build();
-            NotificationManager myNotificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-            myNotificationManager.notify(messageId.hashCode(), myNotification);
-
-            storeNotification(bundle);
         }
     }
 

@@ -3,8 +3,6 @@
 #import "Firebase.h"
 #import <objc/runtime.h>
 
-#import "MarketingCloudSDK/MarketingCloudSDK.h"
-
 @import UserNotifications;
 @import FirebaseFirestore;
 
@@ -289,7 +287,7 @@ static bool authStateChangeListenerInitialized = false;
 - (BOOL)application:(nonnull UIApplication *)application
             openURL:(nonnull NSURL *)url
             options:(nonnull NSDictionary<NSString *, id> *)options {
-  
+
   // Cordova's App Delegate stopped receiving this call, we use the notification instead
   [[NSNotificationCenter defaultCenter] postNotificationName:@"CDVPluginHandleOpenURLWithAppSourceAndAnnotationNotification" object:url userInfo:options];
   return [[GIDSignIn sharedInstance] handleURL:url];
@@ -311,17 +309,11 @@ static bool authStateChangeListenerInitialized = false;
        willPresentNotification:(UNNotification *)notification
          withCompletionHandler:(void (^)(UNNotificationPresentationOptions options))completionHandler {
 
-    /** when we receive a push notificaton from Marketing Cloud the Firebase code invoked below
+    /** when we receive a push notificaton from another provider the Firebase code invoked below
         enters an infinite recursion that makes the App crash
         As we don't need to support both push notification systems we simply disable all the Firebase
-        code and simply call Marketing Cloud
-
-        notifications received through this method were received while the app was in the foreground
-        we pass a flag set to true to signal this to the Marketing Cloud plugin
+        code
      */
-    objc_setAssociatedObject(notification.request, (__bridge void *) [MarketingCloudSDK sharedInstance], @(true), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:notification.request];
-    completionHandler(UNNotificationPresentationOptionSound);
 
 //     @try{
 //
@@ -400,13 +392,11 @@ static bool authStateChangeListenerInitialized = false;
           withCompletionHandler:(void (^)(void))completionHandler
 {
 
-    /** when we receive a push notificaton from Marketing Cloud the Firebase code invoked below
+    /** when we receive a push notificaton from another provider the Firebase code invoked below
         enters an infinite recursion that makes the App crash
         As we don't need to support both push notification systems we simply disable all the Firebase
-        code and call Marketing Cloud
+        code
      */
-    completionHandler ? completionHandler() : NSLog (@"");
-    [[MarketingCloudSDK sharedInstance] sfmc_setNotificationRequest:response.notification.request];
 
 //     @try{
 //

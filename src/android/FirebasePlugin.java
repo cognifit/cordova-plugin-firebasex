@@ -207,7 +207,8 @@ public class FirebasePlugin extends CordovaPlugin {
                             extras.putString("tap", "background");
                             notificationStack.add(extras);
                             Log.d(TAG, "Notification message found on init: " + extras.toString());
-                            sendNotificationToMarketingCloudPlugin(extras, extras.getString("google.message_id"), false);
+                            // to-do: send the push notification to the plugin responsible for them
+                            // sendNotificationToMarketingCloudPlugin(extras, extras.getString("google.message_id"), false);
                         }
                     }
                     defaultChannelId = getStringResource("default_notification_channel_id");
@@ -593,7 +594,8 @@ public class FirebasePlugin extends CordovaPlugin {
                 data.putString("tap", "background");
                 Log.d(TAG, "Notification message on new intent: " + data.toString());
                 FirebasePlugin.sendMessage(data, applicationContext);
-                sendNotificationToMarketingCloudPlugin(data, data.getString("google.message_id"), false);
+                // to-do: send the push notification to the plugin responsible for them
+                // sendNotificationToMarketingCloudPlugin(data, data.getString("google.message_id"), false);
             }
         } catch (Exception e) {
             handleExceptionWithoutContext(e);
@@ -2137,7 +2139,7 @@ public class FirebasePlugin extends CordovaPlugin {
     }
 
     protected static void createDefaultChannel(final JSONObject options) throws JSONException {
-        // don't, we use only the Marketing Cloud channel
+        // don't, we use other providers for push notifications
         // defaultNotificationChannel = createChannel(options);
     }
 
@@ -3172,34 +3174,5 @@ public class FirebasePlugin extends CordovaPlugin {
 
     private int conformBooleanForPluginResult(boolean result) {
         return result ? 1 : 0;
-    }
-
-    /**
-     * ROUTING OF NOTIFICATIONS TO MARKETING CLOUD PLUGIN
-     */
-
-    public static void sendNotificationToMarketingCloudPlugin(Bundle bundle, String notificationId, Boolean wasReceivedInForeground) {
-
-        CordovaPlugin marketingCloudPlugin = FirebasePlugin.instance.webView.getPluginManager().getPlugin("MCCordovaPlugin");
-        try {
-            Method method = marketingCloudPlugin.getClass().getMethod("handleNotificationData", Bundle.class, String.class, Boolean.class);
-            method.invoke(marketingCloudPlugin, bundle, notificationId, wasReceivedInForeground);
-        } catch (IllegalAccessException e) {
-        } catch (InvocationTargetException e) {
-        } catch (NoSuchMethodException e) {
-        } catch (SecurityException e) {
-        }
-    }
-
-    public static void sendNotificationToMarketingCloudPlugin(Map<String, String> data, String notificationId, Boolean wasReceivedInForeground) {
-        CordovaPlugin marketingCloudPlugin = FirebasePlugin.instance.webView.getPluginManager().getPlugin("MCCordovaPlugin");
-        try {
-            Method method = marketingCloudPlugin.getClass().getMethod("handleNotificationData", Map.class, String.class, Boolean.class);
-            method.invoke(marketingCloudPlugin, data, notificationId, wasReceivedInForeground);
-        } catch (IllegalAccessException e) {
-        } catch (InvocationTargetException e) {
-        } catch (NoSuchMethodException e) {
-        } catch (SecurityException e) {
-        }
     }
 }
