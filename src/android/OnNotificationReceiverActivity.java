@@ -1,20 +1,30 @@
 package org.apache.cordova.firebase;
 
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.lang.reflect.Method;
-
-public class OnNotificationOpenReceiver extends BroadcastReceiver {
-
-    // Called on tapping foreground notification
+public class OnNotificationReceiverActivity extends Activity {
     @Override
-    public void onReceive(Context context, Intent intent) {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d(FirebasePlugin.TAG, "OnNotificationReceiverActivity.onCreate()");
+        handleNotification(this, getIntent());
+        finish();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Log.d(FirebasePlugin.TAG, "OnNotificationReceiverActivity.onNewIntent()");
+        handleNotification(this, intent);
+        finish();
+    }
+
+    private static void handleNotification(Context context, Intent intent) {
         try{
             PackageManager pm = context.getPackageManager();
 
@@ -25,7 +35,7 @@ public class OnNotificationOpenReceiver extends BroadcastReceiver {
             if(!data.containsKey("messageType")) data.putString("messageType", "notification");
             data.putString("tap", FirebasePlugin.inBackground() ? "background" : "foreground");
 
-            Log.d(FirebasePlugin.TAG, "OnNotificationOpenReceiver.onReceive(): "+data.toString());
+            Log.d(FirebasePlugin.TAG, "OnNotificationReceiverActivity.handleNotification(): "+data.toString());
 
             FirebasePlugin.sendMessage(data, context);
 
@@ -33,16 +43,6 @@ public class OnNotificationOpenReceiver extends BroadcastReceiver {
             context.startActivity(launchIntent);
         }catch (Exception e){
             FirebasePlugin.handleExceptionWithoutContext(e);
-        }
-    }
-
-    private void storeNotificationInLocalNotificationsStack(Bundle bundle) {
-        try {
-            Class<?> localNotificationsPluginClass = Class.forName("com.cognifit.localnotifications.LocalNotificationsPlugin");
-            Method method = localNotificationsPluginClass.getDeclaredMethod("storeNotificationBundle", Bundle.class);
-            method.invoke(localNotificationsPluginClass, bundle);
-        } catch (Exception e) {
-
         }
     }
 }
