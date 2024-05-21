@@ -405,6 +405,9 @@ end
         return podFileModified;
     },
     ensureEncodedAppIdInUrlSchemes: function (iosPlatform){
+        // most of our projects support the creation of multiple Apps, each with a unique bundle ID and Firebase configuration
+        // we use post-build scripts to set the correct Google App ID, and the code below breaks becuase we don't have the default configuration
+        return;
         var googlePlist = plist.parse(fs.readFileSync(path.resolve(iosPlatform.dest), 'utf8')),
             appPlist = plist.parse(fs.readFileSync(path.resolve(iosPlatform.appPlist), 'utf8')),
             googleAppId = googlePlist["GOOGLE_APP_ID"],
