@@ -192,8 +192,10 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if (data.containsKey("notification_foreground")) {
                     foregroundNotification = true;
                 }
-                if(data.containsKey("notification_title")) title = data.get("notification_title");
-                if(data.containsKey("notification_body")) body = data.get("notification_body");
+                // adapted to Amazon PinPoint
+                if(data.containsKey("pinpoint.notification.title")) title = data.get("pinpoint.notification.title");
+                if(data.containsKey("pinpoint.notification.body")) body = data.get("pinpoint.notification.body");
+
                 if(data.containsKey("notification_android_body_html")) bodyHtml = data.get("notification_android_body_html");
                 if(data.containsKey("notification_android_channel_id")) channelId = data.get("notification_android_channel_id");
                 if(data.containsKey("notification_android_id")) id = data.get("notification_android_id");
