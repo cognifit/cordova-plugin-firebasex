@@ -218,7 +218,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if (data.containsKey("notification_android_image_type"))
                     imageType = data.get("notification_android_image_type");
 
-                storeNotification(data);
+                storeNotification(data, remoteMessage.getSentTime());
                 // to-do: send the push notification to the plugin responsible for them
                 // if (FirebasePlugin.inBackground())
                 //    showMarketingCloudNotification(data, remoteMessage.getMessageId());
@@ -589,7 +589,7 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void storeNotification(Map<String, String> data) {
+    private void storeNotification(final Map<String, String> data, final long sentTime) {
         JSONObject json = new JSONObject();
         Set<String> keys = data.keySet();
         try {
@@ -612,6 +612,9 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             json.getJSONObject("raw").getJSONObject("data").getJSONObject("pinpoint").getJSONObject("campaign").put("campaign_id", data.get("pinpoint.campaign.campaign_id"));
             json.getJSONObject("raw").getJSONObject("data").getJSONObject("pinpoint").getJSONObject("campaign").put("campaign_activity_id", data.get("pinpoint.campaign.campaign_activity_id"));
 
+            // Pinpoint doesn't seem to generate a notification id, we use the timestamp instead. If we have the campaign_id we use both
+            final String notificationId = data.containsKey("pinpoint.campaign.campaign_id") ? data.get("pinpoint.campaign.campaign_id") + "_" + String.valueOf(sentTime) : String.valueOf(sentTime);
+            json.put("__$requestIdentifier$__", notificationId);
             json.put("__$timestamp$__", System.currentTimeMillis());
             SharedPreferences preferences = this.getSharedPreferences("PushNotifications", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
