@@ -1,6 +1,5 @@
 package org.apache.cordova.firebase;
 
-import android.app.NotificationChannel;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Bitmap;
 
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -21,11 +19,9 @@ import android.os.Bundle;
 import androidx.core.app.NotificationCompat;
 
 import android.util.Log;
-import android.app.Notification;
 import android.text.TextUtils;
 import android.text.Html;
 import android.text.Spanned;
-import android.content.ContentResolver;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
@@ -34,7 +30,6 @@ import android.graphics.RectF;
 import android.graphics.Paint;
 import android.graphics.Canvas;
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -176,13 +171,13 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 }
                 if (!TextUtils.isEmpty(titleLocKey)) {
                     int titleId = getResources().getIdentifier(titleLocKey, "string", getPackageName());
-                    title = String.format(getResources().getString(titleId), (Object[])titleLocArgs);
+                    title = String.format(getResources().getString(titleId), (Object[]) titleLocArgs);
                 }
                 if (!TextUtils.isEmpty(bodyLocKey)) {
                     int bodyId = getResources().getIdentifier(bodyLocKey, "string", getPackageName());
-                    body = String.format(getResources().getString(bodyId), (Object[])bodyLocArgs);
+                    body = String.format(getResources().getString(bodyId), (Object[]) bodyLocArgs);
                 }
-            }else{
+            } else {
                 Log.i(TAG, "Received message: data");
                 messageType = "data";
             }
@@ -193,22 +188,35 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     foregroundNotification = true;
                 }
                 // adapted to Amazon PinPoint
-                if(data.containsKey("pinpoint.notification.title")) title = data.get("pinpoint.notification.title");
-                if(data.containsKey("pinpoint.notification.body")) body = data.get("pinpoint.notification.body");
+                if (data.containsKey("pinpoint.notification.title"))
+                    title = data.get("pinpoint.notification.title");
+                if (data.containsKey("pinpoint.notification.body"))
+                    body = data.get("pinpoint.notification.body");
 
-                if(data.containsKey("notification_android_body_html")) bodyHtml = data.get("notification_android_body_html");
-                if(data.containsKey("notification_android_channel_id")) channelId = data.get("notification_android_channel_id");
-                if(data.containsKey("notification_android_id")) id = data.get("notification_android_id");
-                if(data.containsKey("notification_android_sound")) sound = data.get("notification_android_sound");
-                if(data.containsKey("notification_android_vibrate")) vibrate = data.get("notification_android_vibrate");
-                if(data.containsKey("notification_android_light")) light = data.get("notification_android_light"); //String containing hex ARGB color, miliseconds on, miliseconds off, example: '#FFFF00FF,1000,3000'
-                if(data.containsKey("notification_android_color")) color = data.get("notification_android_color");
-                if(data.containsKey("notification_android_icon")) icon = data.get("notification_android_icon");
-                if(data.containsKey("notification_android_visibility")) visibility = data.get("notification_android_visibility");
-                if(data.containsKey("notification_android_priority")) priority = data.get("notification_android_priority");
-                if(data.containsKey("notification_android_image")) image = data.get("notification_android_image");
-                if(data.containsKey("notification_android_image_type")) imageType = data.get("notification_android_image_type");
-
+                if (data.containsKey("notification_android_body_html"))
+                    bodyHtml = data.get("notification_android_body_html");
+                if (data.containsKey("notification_android_channel_id"))
+                    channelId = data.get("notification_android_channel_id");
+                if (data.containsKey("notification_android_id"))
+                    id = data.get("notification_android_id");
+                if (data.containsKey("notification_android_sound"))
+                    sound = data.get("notification_android_sound");
+                if (data.containsKey("notification_android_vibrate"))
+                    vibrate = data.get("notification_android_vibrate");
+                if (data.containsKey("notification_android_light"))
+                    light = data.get("notification_android_light"); //String containing hex ARGB color, miliseconds on, miliseconds off, example: '#FFFF00FF,1000,3000'
+                if (data.containsKey("notification_android_color"))
+                    color = data.get("notification_android_color");
+                if (data.containsKey("notification_android_icon"))
+                    icon = data.get("notification_android_icon");
+                if (data.containsKey("notification_android_visibility"))
+                    visibility = data.get("notification_android_visibility");
+                if (data.containsKey("notification_android_priority"))
+                    priority = data.get("notification_android_priority");
+                if (data.containsKey("notification_android_image"))
+                    image = data.get("notification_android_image");
+                if (data.containsKey("notification_android_image_type"))
+                    imageType = data.get("notification_android_image_type");
                 // to-do: send the push notification to the plugin responsible for them
                 // if (FirebasePlugin.inBackground())
                 //    showMarketingCloudNotification(data, remoteMessage.getMessageId());
@@ -280,11 +288,11 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             PendingIntent pendingIntent;
             final int flag = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : PendingIntent.FLAG_UPDATE_CURRENT;  // Only add on platform levels that support FLAG_MUTABLE
 
-            if(getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.S && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.S && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 intent = new Intent(this, OnNotificationReceiverActivity.class);
                 intent.putExtras(bundle);
                 pendingIntent = PendingIntent.getActivity(this, id.hashCode(), intent, flag);
-            }else{
+            } else {
                 intent = new Intent(this, OnNotificationOpenReceiver.class);
                 intent.putExtras(bundle);
                 pendingIntent = PendingIntent.getBroadcast(this, id.hashCode(), intent, flag);
@@ -306,14 +314,14 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     .setAutoCancel(true)
                     .setContentIntent(pendingIntent);
 
-            if(bodyHtml != null) {
+            if (bodyHtml != null) {
                 notificationBuilder
-                    .setContentText(fromHtml(body))
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(fromHtml(body)));
-            }else{
+                        .setContentText(fromHtml(body))
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(fromHtml(body)));
+            } else {
                 notificationBuilder
-                    .setContentText(body)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body));
+                        .setContentText(body)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(body));
             }
 
 
@@ -395,9 +403,9 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 if (customLargeIconResID != 0 || defaultLargeIconResID != 0) {
                     if (customLargeIconResID != 0) {
                         largeIconResID = customLargeIconResID;
-                        Log.d(TAG, "Large icon: custom="+icon);
-                    }else{
-                        Log.d(TAG, "Large icon: default="+defaultLargeIconName);
+                        Log.d(TAG, "Large icon: custom=" + icon);
+                    } else {
+                        Log.d(TAG, "Large icon: default=" + defaultLargeIconName);
                         largeIconResID = defaultLargeIconResID;
                     }
                     notificationBuilder.setLargeIcon(BitmapFactory.decodeResource(getApplicationContext().getResources(), largeIconResID));
@@ -406,13 +414,12 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
             // Image
             if (image != null) {
-                Log.d(TAG, "Large icon: image="+image);
+                Log.d(TAG, "Large icon: image=" + image);
                 Bitmap bitmap = getBitmapFromURL(image);
-                if(bitmap != null) {
-                    if(imageTypeCircle.equalsIgnoreCase(imageType)) {
+                if (bitmap != null) {
+                    if (imageTypeCircle.equalsIgnoreCase(imageType)) {
                         bitmap = getCircleBitmap(bitmap);
-                    }
-                    else if(imageTypeBigPicture.equalsIgnoreCase(imageType)) {
+                    } else if (imageTypeBigPicture.equalsIgnoreCase(imageType)) {
                         notificationBuilder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bitmap).bigLargeIcon((Bitmap) null));
                     }
                     notificationBuilder.setLargeIcon(bitmap);
