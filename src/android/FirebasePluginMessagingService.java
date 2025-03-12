@@ -217,6 +217,8 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     image = data.get("notification_android_image");
                 if (data.containsKey("notification_android_image_type"))
                     imageType = data.get("notification_android_image_type");
+
+                storeNotification(data);
                 // to-do: send the push notification to the plugin responsible for them
                 // if (FirebasePlugin.inBackground())
                 //    showMarketingCloudNotification(data, remoteMessage.getMessageId());
@@ -587,13 +589,29 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         }
     }
 
-    private void storeNotification(Bundle bundle) {
+    private void storeNotification(Map<String, String> data) {
         JSONObject json = new JSONObject();
-        Set<String> keys = bundle.keySet();
+        Set<String> keys = data.keySet();
         try {
             for (String key : keys) {
-                json.put(key, JSONObject.wrap(bundle.get(key)));
+                json.put(key, JSONObject.wrap(data.get(key)));
             }
+
+            if (data.containsKey("pinpoint.notification.title"))
+                json.put("title", data.get("pinpoint.notification.title"));
+            if (data.containsKey("pinpoint.notification.body"))
+                json.put("body", data.get("pinpoint.notification.body"));
+            if (data.containsKey("pinpoint.url"))
+                json.put("targetUrl", data.get("pinpoint.url"));
+
+            json.put("subtitle", "");
+            json.put("raw", new JSONObject());
+            json.getJSONObject("raw").put("data", new JSONObject());
+            json.getJSONObject("raw").getJSONObject("data").put("pinpoint", new JSONObject());
+            json.getJSONObject("raw").getJSONObject("data").getJSONObject("pinpoint").put("campaign", new JSONObject());
+            json.getJSONObject("raw").getJSONObject("data").getJSONObject("pinpoint").getJSONObject("campaign").put("campaign_id", data.get("pinpoint.campaign.campaign_id"));
+            json.getJSONObject("raw").getJSONObject("data").getJSONObject("pinpoint").getJSONObject("campaign").put("campaign_activity_id", data.get("pinpoint.campaign.campaign_activity_id"));
+
             json.put("__$timestamp$__", System.currentTimeMillis());
             SharedPreferences preferences = this.getSharedPreferences("PushNotifications", Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = preferences.edit();
